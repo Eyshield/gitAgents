@@ -1,0 +1,57 @@
+{
+  "name": "git-agents",
+  "displayName": "Git agents",
+  "version": "0.0.1",
+  "description": "an extension that let s you see  and manage the n8n workflows on github ",
+  "author": "Eyshield",
+  "scripts": {
+    "dev": "plasmo dev",
+    "build": "plasmo build",
+    "package": "plasmo package"
+  },
+  "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.23",
+    "@radix-ui/react-scroll-area": "^1.2.18",
+    "@radix-ui/react-slot": "^1.3.3",
+    "@radix-ui/react-tabs": "^1.1.21",
+    "@xyflow/react": "^12.12.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "dagre": "^0.8.5",
+    "lucide-react": "^1.48.0",
+    "plasmo": "0.90.5",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "simple-icons": "^16.32.0",
+    "tailwind-merge": "^3.7.0",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@ianvs/prettier-plugin-sort-imports": "4.1.1",
+    "@types/chrome": "^0.0.258",
+    "@types/dagre": "^0.7.54",
+    "@types/node": "20.11.5",
+    "@types/react": "18.2.48",
+    "@types/react-dom": "18.2.18",
+    "autoprefixer": "^10.6.1",
+    "postcss": "^8.5.28",
+    "prettier": "3.2.4",
+    "tailwindcss": "^3.4.17",
+    "typescript": "5.3.3"
+  },
+  "manifest": {
+    "permissions": [
+      "storage",
+      "activeTab",
+      "scripting"
+    ],
+    "host_permissions": [
+      "https://github.com/*",
+      "https://github.com/login/*",
+      "https://api.github.com/*",
+      "https://raw.githubusercontent.com/*",
+      "http://localhost/*",
+      "http://127.0.0.1/*"
+    ]
+  }
+}

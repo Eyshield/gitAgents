@@ -1,0 +1,124 @@
+@tailwind components;
+@tailwind utilities;
+
+#gitflow-studio-root {
+  --base: #0d0d0f;
+  --surface: #17171a;
+  --subtle: #2a2a2e;
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --primary-foreground: #ffffff;
+  --secondary: #17171a;
+  --secondary-foreground: #e8e8ea;
+  --muted: #17171a;
+  --muted-foreground: #8b8b8f;
+  --accent: #3b82f6;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --error: #ef4444;
+  --success: #22c55e;
+  --background: var(--base);
+  --foreground: #e8e8ea;
+  --card: var(--surface);
+  --card-foreground: #e8e8ea;
+  --popover: var(--surface);
+  --popover-foreground: #e8e8ea;
+  --border: var(--subtle);
+  --input: var(--subtle);
+  --ring: var(--accent);
+  --radius: 0.5rem;
+}
+
+#gitflow-studio-root,
+#gitflow-studio-root * {
+  box-sizing: border-box;
+}
+
+#gitflow-studio-root {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  font-size: 13px;
+  line-height: 1.45;
+  isolation: isolate;
+  text-rendering: optimizeLegibility;
+}
+
+#gitflow-studio-root * {
+  border-color: var(--border);
+}
+
+#gitflow-studio-root :where(h1, h2, h3, h4, p, dl, dd, dt, fieldset, legend) {
+  margin: 0;
+}
+
+#gitflow-studio-root :where(button, input, select, textarea) {
+  font: inherit;
+}
+
+#gitflow-studio-root :where(button) {
+  cursor: pointer;
+}
+
+#gitflow-studio-root :where(button[data-workflow-control]) {
+  cursor: pointer !important;
+}
+
+#gitflow-studio-root :where(button:disabled, input:disabled, select:disabled) {
+  cursor: not-allowed;
+}
+
+#gitflow-studio-root :where(input, select, textarea) {
+  color: var(--foreground);
+  background: var(--base);
+}
+
+#gitflow-studio-root :where(input, select, textarea)::placeholder {
+  color: var(--muted-foreground);
+  opacity: 1;
+}
+
+#gitflow-studio-root :where(select) {
+  color-scheme: dark;
+}
+
+#gitflow-studio-root :where(option) {
+  color: var(--foreground);
+  background: var(--surface);
+}
+
+#gitflow-studio-root {
+  @apply bg-background text-foreground;
+}
+
+/* Popup pages do not inherit the host page reset. */
+html:not(:has(> #gitflow-studio-root[data-gitflow-studio])):has(
+    > #gitflow-studio-root
+  ),
+html:not(:has(> #gitflow-studio-root[data-gitflow-studio]))
+  body:has(> #gitflow-studio-root) {
+  margin: 0;
+  padding: 0;
+  background: var(--base);
+}
+
+html:not(:has(> #gitflow-studio-root[data-gitflow-studio])) body {
+  min-width: 320px;
+  color: var(--foreground);
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+html:not(:has(> #gitflow-studio-root[data-gitflow-studio])) button,
+html:not(:has(> #gitflow-studio-root[data-gitflow-studio])) input,
+html:not(:has(> #gitflow-studio-root[data-gitflow-studio])) select,
+html:not(:has(> #gitflow-studio-root[data-gitflow-studio])) textarea {
+  font: inherit;
+}
+
+/* React Flow checks this style on the first render in its development build. */
+#gitflow-studio-root .react-flow__pane {
+  z-index: 1;
+}
