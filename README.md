@@ -1,67 +1,234 @@
 # GitAgent Studio
 
-GitAgent Studio is a browser extension for visualizing and versioning n8n workflows stored in GitHub. Instead of reading a workflow as a large JSON file, you can inspect its nodes and connections in a visual canvas directly from GitHub.
+**Visualize, inspect, and version n8n workflows directly from your browser.**
 
-The project is currently a work in progress. The features described below reflect the current prototype.
+GitAgent Studio is a browser extension that brings a visual workflow experience to n8n workflows stored on GitHub or opened from a local n8n instance.
 
-## What works today
+Instead of working with large and difficult-to-read JSON files, GitAgent Studio turns n8n workflow definitions into an interactive visual graph, while providing a local Git-style versioning workflow directly in the browser.
 
-- Detects n8n workflow JSON files on GitHub.
-- Displays the workflow as a read-only visual graph with nodes and connections.
-- Lets you switch back to the original JSON source.
-- Saves local workflow snapshots in the browser.
-- Detects changes between the current n8n workflow and its local version.
-- Provides a local Git-style workflow with `Add` and `Commit` actions.
-- Shows the local workflow status and recent local commits.
-- Adds a local versioning panel to workflows opened from an n8n instance running on `localhost` or `127.0.0.1`.
+> **Status:** Early prototype — the visual viewer and local versioning workflow are currently functional. Remote GitHub synchronization is still under development.
 
-## Demo
+---
 
-### Visualize an n8n workflow on GitHub
+## ✨ Features
+
+### 🔎 Visualize n8n workflows
+
+When an n8n workflow JSON file is opened on GitHub, GitAgent Studio can detect it and replace the raw JSON experience with a visual representation.
+
+* Detect n8n workflow JSON files on GitHub
+* Visualize nodes and connections
+* Inspect workflow structure through a graph-based interface
+* Switch between the visual workflow and the original JSON
+* Read-only visualization to prevent accidental modifications
+
+### 🗂️ Local workflow versioning
+
+GitAgent Studio provides a lightweight Git-style workflow directly in the browser.
+
+* Create local workflow snapshots
+* Detect changes between workflow versions
+* Add modified workflows to the local index
+* Create local commits
+* View local workflow status
+* Browse recent local commits
+* Store version history locally using IndexedDB
+
+### 🧩 Local n8n support
+
+The extension can also detect workflows opened from an n8n instance running locally.
+
+Supported local addresses include:
+
+* `localhost`
+* `127.0.0.1`
+
+This allows you to work on an n8n workflow locally while keeping a lightweight version history directly in the browser.
+
+---
+
+# 🎥 Demo
+
+## Visualize an n8n workflow
+
+GitAgent Studio detects an n8n workflow JSON file on GitHub and transforms it into a visual workflow graph.
 
 <video src="./assets/visulize%20woekflow.mp4" controls width="100%">
-  Your browser does not support embedded videos. [Watch the visualization demo](./assets/visulize%20woekflow.mp4).
+  Your browser does not support embedded videos.
 </video>
 
-[Open the visualization demo](./assets/visulize%20woekflow.mp4)
+[▶ Watch the visualization demo](./assets/visulize%20woekflow.mp4)
 
-### Version an n8n workflow locally
+---
+
+## Version an n8n workflow locally
+
+The local versioning workflow allows you to detect changes, add them to the local index, and create local commits.
 
 <video src="./assets/versionning.mp4" controls width="100%">
-  Your browser does not support embedded videos. [Watch the versioning demo](./assets/versionning.mp4).
+  Your browser does not support embedded videos.
 </video>
 
-[Open the versioning demo](./assets/versionning.mp4)
+[▶ Watch the versioning demo](./assets/versionning.mp4)
 
-## Current limitations
+---
 
-The `Connect with GitHub` button is present in the interface but is not functional yet. GitHub authentication, remote repository linking, and the complete remote synchronization workflow are still being developed. For now, the reliable workflow is the local one: inspect an n8n workflow, detect changes, add them to the local index, and create local commits.
+# 🔄 Current Workflow
 
-Only n8n workflows are supported at the moment. Zapier and Make workflow formats are planned for a later stage.
+The current prototype focuses on a **local-first versioning workflow**:
 
-## Coming next
+```text
+Open n8n Workflow
+        │
+        ▼
+Detect Workflow Changes
+        │
+        ▼
+Compare with Local Version
+        │
+        ▼
+       Add
+        │
+        ▼
+     Commit
+        │
+        ▼
+Local Version History
+```
 
-The next versioning and collaboration features will include:
+The goal is to provide familiar version-control concepts without requiring a full Git client inside the browser.
 
-- Branch management and branch-based workflows.
-- Visual diffs between workflow versions and branches.
-- Pulling the latest workflow version from a remote repository.
-- Pushing changes to GitHub after authentication is stable.
-- Pull Request creation on GitHub.
-- Merge Request creation on GitLab.
-- Better conflict handling during synchronization.
+---
 
-## Development
+# 🚧 Current Limitations
 
-This extension is built with Plasmo, React, TypeScript, Tailwind CSS, React Flow, and IndexedDB for local storage.
+GitAgent Studio is still under active development.
+
+### GitHub integration
+
+The **Connect with GitHub** interface is already present, but remote Git operations are not fully implemented yet.
+
+The following features are currently under development:
+
+* GitHub authentication
+* Remote repository linking
+* Fetching remote workflow versions
+* Pushing workflow changes
+* Remote synchronization
+* Pull Request creation
+
+For now, the reliable workflow is the **local versioning flow**.
+
+### Workflow support
+
+Currently, GitAgent Studio supports:
+
+* ✅ n8n
+
+Planned:
+
+* ⏳ Zapier
+* ⏳ Make
+
+---
+
+# 🛣️ Roadmap
+
+The next stages of GitAgent Studio will focus on remote collaboration and more advanced version control.
+
+### Version Control
+
+* [ ] Branch management
+* [ ] Branch-based workflow versions
+* [ ] Visual diffs between workflow versions
+* [ ] Visual diffs between branches
+* [ ] Improved conflict detection
+* [ ] Conflict resolution
+
+### GitHub
+
+* [ ] GitHub authentication
+* [ ] Connect repositories
+* [ ] Pull latest workflow versions
+* [ ] Push workflow changes
+* [ ] Create Pull Requests
+* [ ] Remote synchronization
+
+### GitLab
+
+* [ ] GitLab authentication
+* [ ] Repository integration
+* [ ] Push workflow changes
+* [ ] Create Merge Requests
+
+### Workflow Formats
+
+* [x] n8n
+* [ ] Zapier
+* [ ] Make
+* [ ] Additional workflow formats
+
+---
+
+# 🧱 Tech Stack
+
+GitAgent Studio is built with:
+
+| Technology       | Purpose                     |
+| ---------------- | --------------------------- |
+| **Plasmo**       | Browser extension framework |
+| **React**        | User interface              |
+| **TypeScript**   | Application logic           |
+| **Tailwind CSS** | Styling                     |
+| **React Flow**   | Workflow visualization      |
+| **IndexedDB**    | Local workflow storage      |
+
+---
+
+# 🚀 Getting Started
+
+## Prerequisites
+
+Make sure you have:
+
+* Node.js
+* npm
+* Google Chrome or another Chromium-based browser
+
+## Installation
+
+Clone the repository and install dependencies:
 
 ```bash
+git clone <repository-url>
 cd git-agents
 npm install
+```
+
+## Start the development build
+
+```bash
 npm run dev
 ```
 
-For Chrome, load the generated development build from `git-agents/build/chrome-mv3-dev` at `chrome://extensions` with Developer mode enabled.
+Plasmo will generate a development build.
+
+For Chrome:
+
+1. Open `chrome://extensions`
+2. Enable **Developer mode**
+3. Click **Load unpacked**
+4. Select:
+
+```text
+git-agents/build/chrome-mv3-dev
+```
+
+The extension should now be available in your browser.
+
+---
+
+# 📦 Production Build
 
 To create a production build:
 
@@ -69,6 +236,68 @@ To create a production build:
 npm run build
 ```
 
-## Project status
+The generated extension can then be packaged and distributed through the appropriate browser extension store or loaded manually.
 
-This is an early prototype. The visual workflow viewer and local versioning flow are available for experimentation, while remote Git operations and collaboration features are still under active development.
+---
+
+# 🗂️ Project Structure
+
+The project is organized around the browser extension architecture provided by Plasmo.
+
+```text
+git-agents/
+├── assets/
+├── context/
+├── src/
+│   ├── ...
+├── package.json
+├── tailwind.config.ts
+├── tsconfig.json
+└── README.md
+```
+
+The architecture is evolving as the project moves from the visualization prototype toward a complete workflow version-control platform.
+
+---
+
+# 🎯 Vision
+
+GitAgent Studio aims to make **workflow development and version control easier to understand and use**.
+
+n8n workflows are powerful, but their JSON representation is not designed for quickly understanding changes, structure, or history.
+
+The long-term goal is to provide a workflow-centric development experience where developers can:
+
+**Visualize → Compare → Version → Collaborate**
+
+without constantly switching between the workflow editor, raw JSON, and Git tooling.
+
+---
+
+# 📌 Project Status
+
+GitAgent Studio is currently an **early-stage prototype**.
+
+### Available today
+
+* ✅ n8n workflow detection on GitHub
+* ✅ Visual workflow visualization
+* ✅ JSON ↔ visual view
+* ✅ Local workflow snapshots
+* ✅ Change detection
+* ✅ Local `Add` / `Commit` workflow
+* ✅ Local commit history
+* ✅ Local n8n workflow support
+
+### In development
+
+* 🚧 GitHub authentication
+* 🚧 Remote repository synchronization
+* 🚧 Branch management
+* 🚧 Visual diffs
+* 🚧 Pull Requests
+* 🚧 GitLab integration
+* 🚧 Conflict resolution
+
+The current focus is validating the workflow visualization and local versioning experience before expanding into remote collaboration.
+
