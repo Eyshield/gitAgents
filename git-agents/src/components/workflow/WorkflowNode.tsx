@@ -3,21 +3,22 @@ import { Handle, Position, type NodeProps } from "@xyflow/react"
 import {
   Blocks,
   Braces,
-  CircleOff,
   Clock3,
   Cloud,
   Database,
   FileText,
   Filter,
+  GitBranch,
   GitMerge,
   Globe,
   Mail,
   MessageCircle,
   MousePointerClick,
-  Settings2,
+  Pencil,
   Table2,
   Timer,
   Webhook,
+  Zap,
   type LucideIcon
 } from "lucide-react"
 import {
@@ -41,37 +42,68 @@ import type { SimpleIcon } from "simple-icons"
 
 import "@/styles/globals.css"
 
-function getNodeIcon(node: WorkflowNodeData): LucideIcon {
-  const value = `${node.platformType ?? ""} ${node.name}`.toLowerCase()
+type NodeVisual = { icon: LucideIcon; color: string }
 
-  if (value.includes("webhook")) return Webhook
-  if (value.includes("manualtrigger") || value.includes("manual trigger")) {
-    return MousePointerClick
+// Couleurs proches de celles utilisées par n8n pour ses icônes natives
+const N8N_ICONS: Record<string, NodeVisual> = {
+  webhook: { icon: Webhook, color: "#ff6d5a" },
+  manualtrigger: { icon: MousePointerClick, color: "#909298" },
+  scheduletrigger: { icon: Clock3, color: "#4a4a4a" },
+  cron: { icon: Clock3, color: "#4a4a4a" },
+  httprequest: { icon: Globe, color: "#2b5fd9" },
+  code: { icon: Braces, color: "#ff6d5a" },
+  function: { icon: Braces, color: "#ff6d5a" },
+  functionitem: { icon: Braces, color: "#ff6d5a" },
+  set: { icon: Pencil, color: "#2b5fd9" },
+  if: { icon: GitBranch, color: "#4caf50" },
+  switch: { icon: GitBranch, color: "#4caf50" },
+  filter: { icon: Filter, color: "#4caf50" },
+  merge: { icon: GitMerge, color: "#2b5fd9" },
+  wait: { icon: Timer, color: "#ff8c42" },
+  noop: { icon: Blocks, color: "#909298" },
+  slack: { icon: MessageCircle, color: "#4a154b" },
+  awss3: { icon: Cloud, color: "#e25444" },
+  postgres: { icon: Database, color: "#336791" },
+  mysql: { icon: Database, color: "#00758f" },
+  mongodb: { icon: Database, color: "#47a248" },
+  emailsend: { icon: Mail, color: "#ea4b71" },
+  emailreadimap: { icon: Mail, color: "#ea4b71" },
+  readbinaryfile: { icon: FileText, color: "#909298" },
+  writebinaryfile: { icon: FileText, color: "#909298" },
+  googlesheets: { icon: Table2, color: "#0f9d58" }
+}
+
+function getShortType(node: WorkflowNodeData): string {
+  return (node.platformType ?? "")
+    .replace(/^n8n-nodes-base\./, "")
+    .replace(/^@n8n\/n8n-nodes-langchain\./, "")
+    .toLowerCase()
+}
+
+function getNodeVisual(node: WorkflowNodeData): NodeVisual {
+  const type = getShortType(node)
+  if (N8N_ICONS[type]) return N8N_ICONS[type]
+
+  // Fallback sur le nom si le type n'est pas connu
+  const name = node.name.toLowerCase()
+  if (name.includes("webhook")) return N8N_ICONS.webhook
+  if (name.includes("schedule") || name.includes("cron")) {
+    return N8N_ICONS.scheduletrigger
   }
-  if (value.includes("schedule") || value.includes("cron")) return Clock3
-  if (value.includes("googlesheets") || value.includes("google sheets")) {
-    return Table2
-  }
-  if (value.includes("awss3") || value.includes("aws s3")) return Cloud
-  if (value.includes("slack")) return MessageCircle
-  if (value.includes("gmail") || value.includes("email")) return Mail
-  if (value.includes("httprequest") || value.includes("http request")) {
-    return Globe
-  }
-  if (
-    value.includes("postgres") ||
-    value.includes("mysql") ||
-    value.includes("mongo")
-  ) {
-    return Database
-  }
-  if (value.includes("filter") || value.includes("if")) return Filter
-  if (value.includes("merge")) return GitMerge
-  if (value.includes("wait")) return Timer
-  if (value.includes("set")) return Settings2
-  if (value.includes("code") || value.includes("function")) return Braces
-  if (value.includes("file") || value.includes("binary")) return FileText
-  return Blocks
+  if (name.includes("http")) return N8N_ICONS.httprequest
+  if (name.includes("email") || name.includes("mail"))
+    return N8N_ICONS.emailsend
+  return { icon: Blocks, color: "#909298" }
+}
+
+function isTrigger(node: WorkflowNodeData): boolean {
+  const type = getShortType(node)
+  return (
+    type.includes("trigger") ||
+    type === "webhook" ||
+    type === "cron" ||
+    type === "start"
+  )
 }
 
 function getBrandIcon(node: WorkflowNodeData): SimpleIcon | null {
@@ -101,15 +133,21 @@ function getBrandIcon(node: WorkflowNodeData): SimpleIcon | null {
   return null
 }
 
-function BrandIcon({ icon }: { icon: SimpleIcon }) {
+function BrandIcon({
+  icon,
+  disabled
+}: {
+  icon: SimpleIcon
+  disabled: boolean
+}) {
   return (
     <svg
       aria-label={`${icon.title} logo`}
-      className="size-9 rounded-md border border-border bg-surface p-1"
+      className={`size-10 ${disabled ? "grayscale" : ""}`}
       fill="none"
       role="img"
       viewBox="0 0 24 24">
-      <path d={icon.path} fill={`#${icon.hex}`} />
+      <path d={icon.path} fill={disabled ? "#9ca3af" : `#${icon.hex}`} />
     </svg>
   )
 }
@@ -123,37 +161,62 @@ function formatNodeType(node: WorkflowNodeData): string {
   )
 }
 
+const handleClass =
+  "!size-3 !rounded-full !border-2 !border-surface !bg-muted-foreground"
+
 export function WorkflowNode({ data, selected }: NodeProps) {
   const workflowNode = data as WorkflowNodeData
-  const NodeIcon = getNodeIcon(workflowNode)
+  const { icon: NodeIcon, color } = getNodeVisual(workflowNode)
   const brandIcon = getBrandIcon(workflowNode)
+  const trigger = isTrigger(workflowNode)
+  const disabled = workflowNode.metadata?.disabled === true
 
   return (
-    <div className="flex w-32 flex-col items-center">
+    <div className="flex w-24 flex-col items-center">
       <div
-        className={`relative flex size-20 items-center justify-center rounded-lg border bg-surface ${selected ? "border-accent" : "border-border"}`}>
-        <Handle
-          className="!bg-muted-foreground"
-          position={Position.Left}
-          type="target"
-        />
-        {workflowNode.metadata?.disabled === true ? (
-          <CircleOff className="size-8 text-muted-foreground" />
-        ) : brandIcon ? (
-          <BrandIcon icon={brandIcon} />
-        ) : (
-          <NodeIcon aria-hidden="true" className="size-7 text-primary" />
+        className={`relative flex size-24 items-center justify-center border-2 bg-surface shadow-sm transition-colors ${
+          trigger ? "rounded-l-[48px] rounded-r-xl" : "rounded-xl"
+        } ${selected ? "border-accent" : "border-border"}`}>
+        {trigger && (
+          <Zap
+            aria-label="Trigger"
+            className="absolute -left-5 top-1/2 size-4 -translate-y-1/2 fill-[#ff6d5a] text-[#ff6d5a]"
+          />
         )}
+
+        {!trigger && (
+          <Handle
+            className={handleClass}
+            position={Position.Left}
+            type="target"
+          />
+        )}
+
+        {brandIcon ? (
+          <BrandIcon disabled={disabled} icon={brandIcon} />
+        ) : (
+          <NodeIcon
+            aria-hidden="true"
+            className="size-10"
+            strokeWidth={1.75}
+            style={{ color: disabled ? "#9ca3af" : color }}
+          />
+        )}
+
         <Handle
-          className="!bg-primary"
+          className={handleClass}
           position={Position.Right}
           type="source"
         />
       </div>
-      <p className="mt-2 max-w-32 truncate text-center text-xs font-medium text-foreground">
+
+      <p
+        className={`mt-2 w-40 truncate text-center text-xs font-semibold text-foreground ${
+          disabled ? "line-through opacity-60" : ""
+        }`}>
         {workflowNode.name}
       </p>
-      <p className="max-w-32 truncate text-center text-xs text-muted-foreground">
+      <p className="w-40 truncate text-center text-[11px] text-muted-foreground">
         {formatNodeType(workflowNode)}
       </p>
     </div>
