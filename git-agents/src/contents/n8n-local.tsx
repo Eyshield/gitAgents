@@ -5,13 +5,6 @@ import { createRoot } from "react-dom/client"
 
 import "@/styles/globals.css"
 
-const LOG_PREFIX = "[GitAgent][n8n-content]"
-
-console.info(`${LOG_PREFIX} content script loaded`, {
-  origin: location.origin,
-  isWorkflowRoute: location.pathname.startsWith("/workflow/")
-})
-
 export const config: PlasmoCSConfig = {
   matches: ["http://localhost/*", "http://127.0.0.1/*"]
 }
@@ -30,19 +23,13 @@ function N8nLocalOverlay({ workflowId }: { workflowId: string }) {
         typeof message === "object" && message !== null
           ? (message as { type?: unknown }).type
           : undefined
-      console.info(`${LOG_PREFIX} runtime message received`, { messageType })
-      if (
-        messageType === "openN8nLocalPanel"
-      ) {
-        console.info(`${LOG_PREFIX} panel opening requested`)
+      if (messageType === "openN8nLocalPanel") {
         setOpen(true)
       }
     }
     chrome.runtime.onMessage.addListener(handleMessage)
-    console.info(`${LOG_PREFIX} runtime listener installed`)
     return () => {
       chrome.runtime.onMessage.removeListener(handleMessage)
-      console.info(`${LOG_PREFIX} runtime listener removed`)
     }
   }, [])
 
@@ -84,12 +71,6 @@ function N8nLocalContentScript() {
     const timer = window.setInterval(() => {
       const nextId = getWorkflowId()
       setWorkflowId((current) => {
-        if (current !== nextId) {
-          console.info(`${LOG_PREFIX} workflow route changed`, {
-            hadWorkflow: Boolean(current),
-            hasWorkflow: Boolean(nextId)
-          })
-        }
         return current === nextId ? current : nextId
       })
     }, 1000)
@@ -104,5 +85,4 @@ const mountPoint = document.createElement("div")
 mountPoint.id = "gitflow-studio-root"
 mountPoint.dataset.gitflowStudio = "n8n-local"
 document.documentElement.appendChild(mountPoint)
-console.info(`${LOG_PREFIX} mount point added`)
 createRoot(mountPoint).render(<N8nLocalContentScript />)

@@ -8,14 +8,11 @@ import {
   readWorkflowViewMode,
   type WorkflowViewMode
 } from "@/core/settings/view-mode"
-import { saveWorkflowSnapshot } from "@/core/versioning/messaging"
-import { getGitHubWorkflowRef } from "@/core/versioning/remote-ref"
-import { createWorkflowSnapshot } from "@/core/versioning/snapshot"
 import { parseWorkflow } from "@/core/workflows/parse-workflow"
 import type { InternalWorkflowModel } from "@/core/workflows/types"
 import type { PlasmoCSConfig } from "plasmo"
 import type { MouseEvent, ReactNode } from "react"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { createRoot, type Root } from "react-dom/client"
 
 import "@/styles/globals.css"
@@ -31,22 +28,6 @@ type WorkflowViewProps = {
 }
 
 function WorkflowView({ workflow, onShowSource }: WorkflowViewProps) {
-  const [snapshotStatus, setSnapshotStatus] = useState<
-    "idle" | "saving" | "saved" | "error"
-  >("idle")
-  const remote = useMemo(() => getGitHubWorkflowRef(), [])
-
-  const saveLocalSnapshot = () => {
-    setSnapshotStatus("saving")
-    void saveWorkflowSnapshot(createWorkflowSnapshot(workflow, remote)).then(
-      (response) => setSnapshotStatus(response.ok ? "saved" : "error")
-    )
-  }
-
-  useEffect(() => {
-    saveLocalSnapshot()
-  }, [workflow, remote])
-
   const handleShowSource = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault()
     event.stopPropagation()
@@ -54,7 +35,7 @@ function WorkflowView({ workflow, onShowSource }: WorkflowViewProps) {
   }
 
   return (
-    <section className="relative isolate z-0 overflow-hidden rounded-lg border border-border bg-surface text-foreground">
+    <section className="relative  z-10 overflow-hidden rounded-lg border border-border bg-surface text-foreground">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-3.5 py-2.5">
         <div>
           <p className="text-sm font-medium">{workflow.meta.name}</p>
@@ -62,23 +43,7 @@ function WorkflowView({ workflow, onShowSource }: WorkflowViewProps) {
         </div>
         <div className="flex items-center gap-2">
           <Button
-            className="relative z-10 !pointer-events-auto cursor-pointer"
-            data-gitflow-action="save-snapshot"
-            disabled={snapshotStatus === "saving"}
-            onClick={(event) => {
-              event.preventDefault()
-              event.stopPropagation()
-              saveLocalSnapshot()
-            }}
-            size="sm"
-            type="button"
-            variant="outline">
-            {snapshotStatus === "saving"
-              ? "Saving…"
-              : "Save locally"}
-          </Button>
-          <Button
-            className="relative z-10 !pointer-events-auto cursor-pointer"
+            className="relative z-10 select-none !pointer-events-auto !cursor-pointer [&_*]:select-none [&_*]:!cursor-pointer"
             data-gitflow-action="show-source"
             onClick={handleShowSource}
             size="sm"
@@ -88,11 +53,6 @@ function WorkflowView({ workflow, onShowSource }: WorkflowViewProps) {
           </Button>
         </div>
       </header>
-      <div className="border-b border-border px-3.5 py-2 text-[11px] text-muted-foreground">
-        {snapshotStatus === "saved" && "Local version saved."}
-        {snapshotStatus === "error" &&
-          "Unable to save the local version."}
-      </div>
       <WorkflowCanvas workflow={workflow} />
     </section>
   )
@@ -126,7 +86,7 @@ function WorkflowError({ onShowSource }: { onShowSource: () => void }) {
           The JSON file could not be interpreted as a valid n8n workflow.
         </p>
         <Button
-          className="relative z-10 !pointer-events-auto cursor-pointer"
+          className="relative z-10 select-none !pointer-events-auto !cursor-pointer [&_*]:select-none [&_*]:!cursor-pointer"
           data-gitflow-action="show-source"
           onClick={handleShowSource}
           size="sm"
@@ -155,7 +115,7 @@ function ManualWorkflowPrompt({ onOpen }: { onOpen: () => void }) {
         </p>
       </div>
       <Button
-        className="relative z-10 !pointer-events-auto cursor-pointer"
+        className="relative z-10 select-none !pointer-events-auto !cursor-pointer [&_*]:select-none [&_*]:!cursor-pointer"
         data-gitflow-action="open-workflow"
         onClick={handleOpen}
         size="sm"

@@ -1,5 +1,4 @@
 import { OpenLocalGitButton } from "@/components/versioning/OpenLocalGitButton"
-import { WorkflowHistory } from "@/components/versioning/WorkflowHistory"
 import { WorkflowViewModeSettings } from "@/components/WorkflowViewModeSettings"
 import { isGitHubConnected } from "@/services/githubMessaging"
 import { useEffect, useState } from "react"
@@ -66,7 +65,6 @@ export function PopupApp() {
         <div className="space-y-5">
           <WorkflowViewModeSettings />
           <OpenLocalGitButton />
-          <WorkflowHistory />
         </div>
       </main>
       <footer className="shrink-0 border-t border-border px-3.5 py-2 text-[10px] text-muted-foreground">

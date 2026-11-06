@@ -36,6 +36,11 @@ export function getWorkflowKey(
   return `${workflow.source}:${workflow.meta.name}`
 }
 
+/**
+ * Crée un snapshot d'un workflow avec un id déterministe (clé du workflow +
+ * hash du contenu sérialisé de façon stable), ce qui rend les sauvegardes
+ * identiques idempotentes.
+ */
 export function createWorkflowSnapshot(
   workflow: InternalWorkflowModel,
   remote?: WorkflowRemoteRef

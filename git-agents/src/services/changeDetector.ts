@@ -7,6 +7,11 @@ type ChangeDetectorOptions = {
   intervalMs?: number
 }
 
+/**
+ * Crée un détecteur de changements qui interroge périodiquement le statut Git
+ * local (uniquement quand l'onglet est visible) et appelle `onStatus` quand le
+ * hash ou le statut change. Expose `start`, `stop` et `refresh` (vérification forcée).
+ */
 export function createChangeDetector({
   refreshStatus,
   onStatus,

@@ -25,9 +25,7 @@ function getActiveWorkflow(tab?: chrome.tabs.Tab): ActiveWorkflow | null {
 
 function readActiveWorkflow(): Promise<ActiveWorkflow | null> {
   return new Promise((resolve) => {
-    console.info(`${LOG_PREFIX} searching for the active n8n tab`)
     if (!isExtensionContextValid() || !chrome.tabs?.query) {
-      console.warn(`${LOG_PREFIX} Chrome API unavailable in popup`)
       resolve(null)
       return
     }
@@ -39,10 +37,6 @@ function readActiveWorkflow(): Promise<ActiveWorkflow | null> {
         return
       }
       const activeWorkflow = getActiveWorkflow(tabs[0])
-      console.info(`${LOG_PREFIX} tab detected`, {
-        tabId: tabs[0]?.id,
-        isN8nWorkflow: Boolean(activeWorkflow)
-      })
       resolve(activeWorkflow)
     })
   })
@@ -56,9 +50,6 @@ export function OpenLocalGitButton() {
 
   useEffect(() => {
     void readActiveWorkflow().then((activeWorkflow) => {
-      console.info(`${LOG_PREFIX} initial state`, {
-        hasWorkflow: Boolean(activeWorkflow)
-      })
       setWorkflow(activeWorkflow)
       setLoading(false)
     })
@@ -71,9 +62,6 @@ export function OpenLocalGitButton() {
     }
     setOpening(true)
     setNotice(null)
-    console.info(`${LOG_PREFIX} envoi openN8nLocalPanel`, {
-      tabId: workflow.tabId
-    })
     chrome.tabs.sendMessage(
       workflow.tabId,
       { type: "openN8nLocalPanel" },
@@ -86,7 +74,6 @@ export function OpenLocalGitButton() {
           )
           setNotice(`Failed: ${runtimeError.message}`)
         } else {
-          console.info(`${LOG_PREFIX} message received by content script`)
           setNotice("Local Git panel opened in the n8n tab.")
         }
         setOpening(false)
@@ -103,9 +90,7 @@ export function OpenLocalGitButton() {
         </p>
       </div>
       {loading && (
-        <p className="text-xs text-muted-foreground">
-          Reading active tab…
-        </p>
+        <p className="text-xs text-muted-foreground">Reading active tab…</p>
       )}
       {!loading && !workflow && (
         <p className="rounded-md border border-border bg-surface p-3 text-xs leading-4 text-muted-foreground">

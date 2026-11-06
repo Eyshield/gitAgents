@@ -17,6 +17,11 @@ type SnapshotResponse = {
   error?: string
 }
 
+/**
+ * Envoie un message au service de versioning local (background script) via
+ * chrome.runtime.sendMessage. Ne rejette jamais : en cas d'erreur (contexte
+ * invalide, service indisponible), retourne `{ ok: false, error }`.
+ */
 function sendMessage(message: SnapshotMessage): Promise<SnapshotResponse> {
   return new Promise((resolve) => {
     if (!isExtensionContextValid()) {

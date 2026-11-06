@@ -1,5 +1,10 @@
 import type { WorkflowRemoteRef } from "./types"
 
+/**
+ * Extrait la référence d'un fichier GitHub (owner, repo, ref, path) depuis une
+ * URL de type `github.com/<owner>/<repo>/blob/<ref>/<path>`, et construit
+ * l'URL raw correspondante. Retourne `undefined` si l'URL n'est pas valide.
+ */
 export function getGitHubWorkflowRef(
   url: string = location.href
 ): WorkflowRemoteRef | undefined {

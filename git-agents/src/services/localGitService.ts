@@ -8,8 +8,12 @@ import {
   type StatusEntry,
   type WorkflowSource
 } from "@/models/localGit"
+import {
+  hashWorkflow,
+  sha256,
+  stableStringify
+} from "@/services/workflowNormalizer"
 import { LocalGitRepository } from "@/storage/localGitRepository"
-import { hashWorkflow, sha256, stableStringify } from "@/services/workflowNormalizer"
 
 export interface LocalGitService {
   refreshStatus(workflowId: string): Promise<StatusEntry>
@@ -111,6 +115,11 @@ function mapStorageError(error: unknown): LocalGitError {
   )
 }
 
+/**
+ * Service Git local pour les workflows n8n : lit le workflow depuis la source,
+ * calcule son statut (clean, modified, staged...), l'ajoute à l'index (avec
+ * détection de secrets), crée des commits et liste l'historique.
+ */
 export class DefaultLocalGitService implements LocalGitService {
   constructor(
     private readonly source: WorkflowSource = new N8nWorkflowSource(),
@@ -166,10 +175,7 @@ export class DefaultLocalGitService implements LocalGitService {
         (entry) => entry.workflowId === workflowId
       )
       if (headEntry?.blobHash === hash && !stagedEntry) {
-        throw new LocalGitError(
-          "NOTHING_TO_ADD",
-          "No changes to add."
-        )
+        throw new LocalGitError("NOTHING_TO_ADD", "No changes to add.")
       }
 
       const entry = {
@@ -191,7 +197,12 @@ export class DefaultLocalGitService implements LocalGitService {
         },
         entry
       )
-      return { workflowId, filePath: entry.filePath, blobHash: hash, status: "staged" }
+      return {
+        workflowId,
+        filePath: entry.filePath,
+        blobHash: hash,
+        status: "staged"
+      }
     } catch (error: unknown) {
       throw mapStorageError(error)
     }
@@ -206,10 +217,7 @@ export class DefaultLocalGitService implements LocalGitService {
     try {
       const state = await this.repository.getState()
       if (state.index.length === 0) {
-        throw new LocalGitError(
-          "NOTHING_TO_COMMIT",
-          "No changes are staged."
-        )
+        throw new LocalGitError("NOTHING_TO_COMMIT", "No changes are staged.")
       }
 
       const entriesByWorkflow = new Map<string, CommitEntry>(
@@ -225,8 +233,8 @@ export class DefaultLocalGitService implements LocalGitService {
           blobHash: entry.blobHash
         })
       }
-      const entries = Array.from(entriesByWorkflow.values()).sort((left, right) =>
-        left.workflowId.localeCompare(right.workflowId)
+      const entries = Array.from(entriesByWorkflow.values()).sort(
+        (left, right) => left.workflowId.localeCompare(right.workflowId)
       )
       const timestamp = Date.now()
       const commitData = {
@@ -250,7 +258,9 @@ export class DefaultLocalGitService implements LocalGitService {
 
   async listCommits(limit = 10): Promise<Commit[]> {
     try {
-      return await this.repository.listCommits(Math.max(0, Math.min(limit, 100)))
+      return await this.repository.listCommits(
+        Math.max(0, Math.min(limit, 100))
+      )
     } catch (error: unknown) {
       throw mapStorageError(error)
     }

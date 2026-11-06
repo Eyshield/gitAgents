@@ -35,6 +35,11 @@ function compareItems<T extends { id: string }>(
   return { added, removed, modified }
 }
 
+/**
+ * Compare deux snapshots de workflow et retourne les nodes ajoutés, supprimés
+ * et modifiés, ainsi que les connexions ajoutées et supprimées.
+ * `isIdentical` vaut true si aucun changement n'est détecté.
+ */
 export function diffWorkflowSnapshots(
   before: WorkflowSnapshot,
   after: WorkflowSnapshot

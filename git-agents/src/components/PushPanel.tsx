@@ -1,6 +1,11 @@
 import { Button } from "@/components/ui/button"
 import type { PushConfirmation } from "@/models/localGit"
-import { getGitHubPushStatus, pushToGitHub } from "@/services/githubMessaging"
+import {
+  getGitHubPushStatus,
+  pullFromGitHub,
+  pushToGitHub
+} from "@/services/githubMessaging"
+import { readN8nWorkflow } from "@/services/localGitMessaging"
 import { useEffect, useState } from "react"
 
 import "@/styles/globals.css"
@@ -8,9 +13,16 @@ import "@/styles/globals.css"
 type PushPanelProps = {
   refreshKey?: number
   onReconnect?: () => void
+  workflowId?: string
+  onPulled?: () => void
 }
 
-export function PushPanel({ refreshKey = 0, onReconnect }: PushPanelProps) {
+export function PushPanel({
+  refreshKey = 0,
+  onReconnect,
+  workflowId,
+  onPulled
+}: PushPanelProps) {
   const [status, setStatus] =
     useState<Awaited<ReturnType<typeof getGitHubPushStatus>>["pushStatus"]>(
       undefined
@@ -20,6 +32,7 @@ export function PushPanel({ refreshKey = 0, onReconnect }: PushPanelProps) {
   )
   const [working, setWorking] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [conflicts, setConflicts] = useState<string[]>([])
   const [notice, setNotice] = useState<string | null>(null)
 
   const refresh = () => {
@@ -39,6 +52,7 @@ export function PushPanel({ refreshKey = 0, onReconnect }: PushPanelProps) {
   }) => {
     setWorking(true)
     setError(null)
+    setConflicts([])
     setNotice(null)
     void pushToGitHub(options)
       .then((response) => {
@@ -67,6 +81,63 @@ export function PushPanel({ refreshKey = 0, onReconnect }: PushPanelProps) {
     if (confirmation === "defaultBranch") push({ confirmedDefaultBranch: true })
     if (confirmation === "overwrite")
       push({ confirmedDefaultBranch: true, confirmedOverwrite: true })
+  }
+
+  const pull = () => {
+    setWorking(true)
+    setError(null)
+    setConflicts([])
+    setNotice(null)
+    const request = workflowId
+      ? readN8nWorkflow(workflowId).then((response) => {
+          if (!response.ok) {
+            throw new Error(
+              response.error ?? "Unable to read the current workflow."
+            )
+          }
+          return pullFromGitHub({
+            workflowId,
+            workflow: response.workflow
+          })
+        })
+      : pullFromGitHub()
+    void request
+      .then((response) => {
+        if (!response.ok) {
+          if (response.code === "MERGE_CONFLICT") {
+            setConflicts(response.conflicts ?? [])
+            setError("Pull stopped because of merge conflicts. Resolve them, then commit the merge.")
+          } else if (response.code === "LOCAL_CHANGES") {
+            setError(
+              response.error ??
+                "Pull could not be completed. Commit or stash your local changes before pulling."
+            )
+          } else {
+            setError(response.error ?? "Pull failed.")
+          }
+          return
+        }
+        const result = response.pullResult
+        if (result?.status === "up-to-date") {
+          setNotice("Already up to date.")
+        } else if (result?.status === "merged") {
+          setNotice(
+            `Pull completed successfully. Remote changes were merged into the current branch${result.updatedFiles ? ` (${result.updatedFiles} file(s) updated)` : ""}.`
+          )
+        } else {
+          setNotice(
+            `Pull completed successfully.${result?.updatedFiles ? ` ${result.updatedFiles} file(s) updated.` : ""}`
+          )
+        }
+        refresh()
+        onPulled?.()
+      })
+      .catch((pullError: unknown) => {
+        setError(
+          pullError instanceof Error ? pullError.message : "Pull failed."
+        )
+      })
+      .finally(() => setWorking(false))
   }
 
   return (
@@ -119,18 +190,26 @@ export function PushPanel({ refreshKey = 0, onReconnect }: PushPanelProps) {
           </div>
         </div>
       )}
-      <Button
-        className="w-full"
-        disabled={
-          !status?.linked ||
-          status.ahead === 0 ||
-          working ||
-          Boolean(confirmation)
-        }
-        onClick={() => push()}
-        type="button">
-        {working ? "Pushing…" : "Push"}
-      </Button>
+      <div className="grid grid-cols-2 gap-2">
+        <Button
+          disabled={!status?.linked || working || Boolean(confirmation)}
+          onClick={pull}
+          type="button"
+          variant="outline">
+          {working ? "Pulling…" : "Pull"}
+        </Button>
+        <Button
+          disabled={
+            !status?.linked ||
+            status.ahead === 0 ||
+            working ||
+            Boolean(confirmation)
+          }
+          onClick={() => push()}
+          type="button">
+          {working ? "Working…" : "Push"}
+        </Button>
+      </div>
       {error === "GitHub reconnection required." ||
       error?.includes("GitHub reconnection") ? (
         <Button
@@ -142,6 +221,17 @@ export function PushPanel({ refreshKey = 0, onReconnect }: PushPanelProps) {
         </Button>
       ) : null}
       {notice && <p className="break-words text-xs text-success">{notice}</p>}
+      {conflicts.length > 0 && (
+        <div
+          aria-live="assertive"
+          className="rounded-md border border-error/40 bg-error/5 p-2 text-xs text-error"
+          role="alert">
+          <p className="font-medium">Conflicted files:</p>
+          <ul className="mt-1 list-inside list-disc space-y-0.5 break-all">
+            {conflicts.map((file) => <li key={file}>{file}</li>)}
+          </ul>
+        </div>
+      )}
       {error && <p className="break-words text-xs text-error">{error}</p>}
     </section>
   )

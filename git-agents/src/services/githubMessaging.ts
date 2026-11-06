@@ -1,12 +1,14 @@
 import { isExtensionContextValid } from "@/core/extension-context"
+import type { RepoRef } from "@/integrations/github/githubRepos"
 import type {
   LinkConfig,
+  PullErrorCode,
+  PullResult,
   PushConfirmation,
   PushErrorCode,
   PushResult,
   Remote
 } from "@/models/localGit"
-import type { RepoRef } from "@/integrations/github/githubRepos"
 import type { PushStatus } from "@/services/pushService"
 
 export type GitHubRequest =
@@ -21,6 +23,11 @@ export type GitHubRequest =
   | { type: "githubListBranches"; owner: string; repo: string }
   | { type: "githubLinkRemote"; config: LinkConfig }
   | { type: "githubGetPushStatus" }
+  | {
+      type: "githubPull"
+      workflowId?: string
+      workflow?: unknown
+    }
   | {
       type: "githubPush"
       options?: {
@@ -41,16 +48,20 @@ export type GitHubResponse = {
   pushStatus?: PushStatus
   author?: { name: string; email: string }
   pushResult?: PushResult
+  pullResult?: PullResult
   confirmation?: PushConfirmation
-  code?: PushErrorCode
+  conflicts?: string[]
+  code?: PushErrorCode | PullErrorCode
   error?: string
 }
 
 export function isGitHubRequest(value: unknown): value is GitHubRequest {
   if (typeof value !== "object" || value === null) return false
   const request = value as Partial<GitHubRequest>
-  if (typeof request.type !== "string" || !request.type.startsWith("github")) return false
-  if (request.type === "githubConnectWithToken") return typeof request.token === "string"
+  if (typeof request.type !== "string" || !request.type.startsWith("github"))
+    return false
+  if (request.type === "githubConnectWithToken")
+    return typeof request.token === "string"
   if (request.type === "githubListBranches") {
     return typeof request.owner === "string" && typeof request.repo === "string"
   }
@@ -74,10 +85,16 @@ export function isGitHubRequest(value: unknown): value is GitHubRequest {
     "githubListRepositories",
     "githubGetAuthor",
     "githubGetPushStatus",
+    "githubPull",
     "githubPush"
   ].includes(request.type)
 }
 
+/**
+ * Envoie une requête GitHub au background script via chrome.runtime.sendMessage.
+ * Ne rejette jamais : en cas d'erreur (contexte invalide, service indisponible),
+ * retourne `{ ok: false, error }`. Toutes les fonctions exportées ci-dessous s'appuient dessus.
+ */
 function sendMessage(message: GitHubRequest): Promise<GitHubResponse> {
   return new Promise((resolve) => {
     if (!isExtensionContextValid()) {
@@ -87,11 +104,11 @@ function sendMessage(message: GitHubRequest): Promise<GitHubResponse> {
     try {
       chrome.runtime.sendMessage(message, (response?: GitHubResponse) => {
         const runtimeError = chrome.runtime.lastError
-        resolve(
-          runtimeError || !response
-            ? { ok: false, error: "The GitHub service is unavailable." }
-            : response
-        )
+        if (runtimeError || !response) {
+          resolve({ ok: false, error: "The GitHub service is unavailable." })
+          return
+        }
+        resolve(response)
       })
     } catch {
       resolve({ ok: false, error: "The GitHub service is unavailable." })
@@ -99,7 +116,8 @@ function sendMessage(message: GitHubRequest): Promise<GitHubResponse> {
   })
 }
 
-export const startGitHubDeviceFlow = () => sendMessage({ type: "githubStartDeviceFlow" })
+export const startGitHubDeviceFlow = () =>
+  sendMessage({ type: "githubStartDeviceFlow" })
 export const waitForGitHubAuthorization = () =>
   sendMessage({ type: "githubWaitForAuthorization" })
 export const cancelGitHubDeviceFlow = () =>
@@ -107,7 +125,8 @@ export const cancelGitHubDeviceFlow = () =>
 export const connectGitHubWithToken = (token: string) =>
   sendMessage({ type: "githubConnectWithToken", token })
 export const disconnectGitHub = () => sendMessage({ type: "githubDisconnect" })
-export const isGitHubConnected = () => sendMessage({ type: "githubIsConnected" })
+export const isGitHubConnected = () =>
+  sendMessage({ type: "githubIsConnected" })
 export const listGitHubRepositories = () =>
   sendMessage({ type: "githubListRepositories" })
 export const getGitHubAuthor = () => sendMessage({ type: "githubGetAuthor" })
@@ -115,7 +134,12 @@ export const listGitHubBranches = (owner: string, repo: string) =>
   sendMessage({ type: "githubListBranches", owner, repo })
 export const linkGitHubRemote = (config: LinkConfig) =>
   sendMessage({ type: "githubLinkRemote", config })
-export const getGitHubPushStatus = () => sendMessage({ type: "githubGetPushStatus" })
+export const getGitHubPushStatus = () =>
+  sendMessage({ type: "githubGetPushStatus" })
+export const pullFromGitHub = (input?: {
+  workflowId?: string
+  workflow?: unknown
+}) => sendMessage({ type: "githubPull", ...input })
 export const pushToGitHub = (options?: {
   confirmedDefaultBranch?: boolean
   confirmedOverwrite?: boolean

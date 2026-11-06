@@ -40,6 +40,18 @@ export type PushErrorCode =
   | "NETWORK_ERROR"
   | "STORAGE_ERROR"
 
+export type PullErrorCode =
+  | "NO_REMOTE_LINKED"
+  | "NOTHING_TO_PULL"
+  | "LOCAL_CHANGES"
+  | "MERGE_CONFLICT"
+  | "REAUTH_REQUIRED"
+  | "GITHUB_FORBIDDEN"
+  | "REPO_NOT_FOUND"
+  | "BRANCH_NOT_FOUND"
+  | "NETWORK_ERROR"
+  | "STORAGE_ERROR"
+
 export type PushConfirmation = "defaultBranch" | "overwrite"
 
 export class LocalGitError extends Error {
@@ -65,6 +77,22 @@ export class PushError extends Error {
     this.name = "PushError"
     this.code = code
     this.confirmation = confirmation
+  }
+}
+
+export class PullError extends Error {
+  readonly code: PullErrorCode
+  readonly conflicts: string[]
+
+  constructor(
+    code: PullErrorCode,
+    message: string,
+    conflicts: string[] = []
+  ) {
+    super(message)
+    this.name = "PullError"
+    this.code = code
+    this.conflicts = conflicts
   }
 }
 
@@ -148,4 +176,11 @@ export type PushResult = {
   pushedCommits: number
   headSha: string
   commitUrl: string
+}
+
+export type PullResult = {
+  status: "up-to-date" | "updated" | "merged"
+  updatedFiles: number
+  remoteHeadSha: string
+  conflicts: string[]
 }

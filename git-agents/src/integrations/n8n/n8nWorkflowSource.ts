@@ -31,7 +31,6 @@ export class N8nWorkflowSource implements WorkflowSource {
 
   async getWorkflow(workflowId: string): Promise<unknown> {
     try {
-      console.info(`${LOG_PREFIX} workflow read requested`)
       return await new ConfiguredN8nClient(this.baseUrl).getWorkflow(workflowId)
     } catch (error: unknown) {
       console.error(`${LOG_PREFIX} workflow read failed`, {

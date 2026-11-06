@@ -46,7 +46,7 @@
 - [x] Modèle de snapshot local (IndexedDB)
 - [x] Sauvegarde automatique d'un snapshot à chaque état de workflow visualisé (l'édition du canvas reste à implémenter)
 - [x] Diff visuel entre deux snapshots (noeuds et connexions ajoutés/modifiés/supprimés)
-- [ ] Pull depuis le repo distant (résolution de conflit basique)
+- [x] Pull depuis le repo distant via l'API GitHub (branche configurée, état à jour, commit local, modifications locales et conflits protégés)
 - [ ] Création de branche + Pull Request (GitHub)
 - [ ] Création de branche + Merge Request (GitLab)
 - [x] Historique de versions consultable dans l'extension
@@ -60,10 +60,12 @@
 
 ## Changelog
 
+- `2026-10-13` — Correction du push multi-commits : Git Trees reçoit le SHA d'arbre parent et conserve les fichiers/workflows non modifiés. Le push valide le JSON n8n, retire les métadonnées de réponse API (y compris des anciens blobs), conserve les nœuds/connexions/paramètres et le pull utilise le contenu du dernier point de base distant pour éviter les faux conflits.
 - `2026-09-29` — Correction du chargement de l'icône dans la popup : l'image est maintenant importée avec le scheme d'URL Plasmo au lieu d'un chemin absolu `/assets/...` non empaqueté.
 - `2026-09-29` — Correction de la balise image de la popup : ajout de l'alternative accessible et utilisation d'une balise auto-fermante.
 - `2026-09-29` — Remplacement de l'icône de l'extension par `assets/icon.jpg`, convertie en `assets/icon.png` pour respecter la détection automatique et le packaging Plasmo.
 - `2026-09-29` — Ajout de la connexion GitHub Device Flow/PAT, du remote IndexedDB v2 et du push Git Data (historique local, contrôles SHA distant, confirmations et détection de secrets). Pull, branches et Pull Requests restent hors scope.
+- `2026-09-30` — Ajout de Git Pull GitHub dans le panneau local : lecture de `origin`, comparaison SHA, récupération des workflows suivis, fusion prudente dans IndexedDB, détection des conflits/modifications locales, bouton Pull avec état de chargement et rafraîchissement de l'historique.
 - `2026-09-29` — Correction du contrôle de liaison GitHub : la propriété API `size` ne bloque plus à tort les petits dépôts initialisés. L'écran distingue maintenant clairement l'installation GitHub App et la liaison manuelle par PAT.
 - `2026-09-29` — Ajout du versionnage Git local n8n : connexion API sécurisée, normalisation/hash SHA-256, stockage IndexedDB séparé, Add/Commit local atomique, détection de secrets, polling des changements et panneau minimal sur `/workflow/<id>`.
 - `2026-09-29` — Ajout des actions Git local dans le popup avec détection de l'onglet n8n actif et d'une aide intégrée décrivant les stores IndexedDB et la séparation de la clé API.

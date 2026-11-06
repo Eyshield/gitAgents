@@ -11,8 +11,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default:
-          "bg-primary text-primary-foreground hover:bg-primary-hover",
+        default: "bg-primary text-primary-foreground hover:bg-primary-hover",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline:
@@ -43,12 +42,31 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, style, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
+
+    // Callback ref pour imposer la propriété CSS avec la priorité !important
+    const handleRef = React.useCallback(
+      (node: HTMLButtonElement | null) => {
+        if (node) {
+          node.style.setProperty("cursor", "pointer", "important")
+          node.style.setProperty("user-select", "none", "important")
+        }
+        if (typeof ref === "function") {
+          ref(node)
+        } else if (ref) {
+          ;(ref as React.MutableRefObject<HTMLButtonElement | null>).current =
+            node
+        }
+      },
+      [ref]
+    )
+
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
+        ref={handleRef}
+        style={style}
         {...props}
       />
     )

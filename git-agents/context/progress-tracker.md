@@ -20,6 +20,13 @@
 
 Phase 2 — versionnage local et synchronisation distante.
 
+## Correctif push GitHub — 2026-10-13
+
+- Le push récupère le SHA de l'arbre du commit parent avant chaque création d'arbre GitHub; le SHA de commit ne sert plus à tort de `base_tree`.
+- Le contenu de chaque blob local est analysé et vérifié comme workflow n8n avant toute écriture. Les métadonnées de réponse API sont retirées même des anciens blobs, tandis que les nœuds, connexions et paramètres sont conservés.
+- Pull compare son point de base avec les fichiers du dernier SHA distant connu, y compris lorsque leur sérialisation n8n a été normalisée pendant le push.
+- Validation : `npx tsc --noEmit`, `git diff --check` et `npm run build` passent. Le build nécessite une exécution hors sandbox (`spawn EPERM` dans le bac à sable).
+
 ## Réalisé récemment
 
 - Ajout de la connexion n8n locale en lecture seule via le service worker.
@@ -38,11 +45,12 @@ Phase 2 — versionnage local et synchronisation distante.
 - Ajout de la connexion GitHub par Device Flow ou PAT, avec stockage des tokens uniquement dans `chrome.storage.local`.
 - Ajout de la migration IndexedDB v2 et du store `remotes` pour lier `origin` à un dépôt et une branche GitHub.
 - Ajout du push Git Data (blobs, trees, commits, mise à jour fast-forward de la ref), de l'historique local, des confirmations et du contrôle de secrets.
+- Ajout du pull GitHub via l'API Git Data/Contents : branche `origin` relue dynamiquement, comparaison de la base distante, commit local atomique, fusion des changements non concurrents et détection des conflits/modifications locales.
 - Correction du faux diagnostic de dépôt vide et simplification du parcours UI GitHub App/PAT avec saisie manuelle explicite du dépôt.
 
 ## État d’architecture
 
-Les composants UI communiquent avec le service worker par messages runtime. Le service worker demande au contexte principal de l'onglet actif de lire d'abord le snapshot Pinia n8n déjà chargé, puis utilise `/rest` avec `credentials: include` en fallback ; la réponse est validée et transmise au traitement local. Les workflows normalisés, les commits et le lien `origin` sont dans IndexedDB. Les appels GitHub passent par le service worker ; aucun token n'est envoyé au content script ni stocké dans IndexedDB. Pull, branches et Pull/Merge Requests restent hors scope.
+Les composants UI communiquent avec le service worker par messages runtime. Le service worker demande au contexte principal de l'onglet actif de lire d'abord le snapshot Pinia n8n déjà chargé, puis utilise `/rest` avec `credentials: include` en fallback ; la réponse est validée et transmise au traitement local. Les workflows normalisés, les commits et le lien `origin` sont dans IndexedDB. Les appels GitHub passent par le service worker ; aucun token n'est envoyé au content script ni stocké dans IndexedDB. Le pull est disponible pour le remote GitHub configuré ; les branches et Pull/Merge Requests restent hors scope.
 
 ## Validation
 
@@ -53,4 +61,4 @@ Les composants UI communiquent avec le service worker par messages runtime. Le s
 
 - Ajouter les tests unitaires de normalisation, déduplication, Add/Commit et rollback IndexedDB.
 - Ajouter les tests unitaires de la connexion GitHub, du push multi-commits et de la migration IndexedDB.
-- Implémenter séparément pull, branches et Pull/Merge Requests selon leurs spécifications.
+- Ajouter les tests unitaires de pull (état à jour, commit distant, conflit et protection contre les modifications locales).

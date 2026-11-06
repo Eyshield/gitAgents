@@ -154,7 +154,6 @@ async function handleN8nWorkflowRequest(
     }
   }
 
-  console.info(`${LOG_PREFIX} reading n8n in page`, { tabId })
   try {
     const execution = await chrome.scripting.executeScript({
       target: { tabId },
@@ -170,11 +169,6 @@ async function handleN8nWorkflowRequest(
         error: "n8n did not return a result."
       }
     }
-    console.info(`${LOG_PREFIX} n8n page response`, {
-      tabId,
-      status: result.status,
-      source: result.source
-    })
     if (!result.ok) {
       if (result.status === 401 || result.status === 403) {
         return {
@@ -305,6 +299,10 @@ function githubErrorResponse(error: unknown): GitHubResponse {
       ok: false,
       code: typed.code,
       confirmation: typed.confirmation,
+      conflicts:
+        Array.isArray((error as { conflicts?: unknown }).conflicts)
+          ? ((error as unknown as { conflicts: string[] }).conflicts)
+          : undefined,
       error: error.message
     }
   }
@@ -361,6 +359,15 @@ async function handleGitHubRequest(request: GitHubRequest): Promise<GitHubRespon
     if (request.type === "githubGetPushStatus") {
       return { ok: true, pushStatus: await pushService.getPushStatus() }
     }
+    if (request.type === "githubPull") {
+      return {
+        ok: true,
+        pullResult: await pushService.pull({
+          workflowId: request.workflowId,
+          workflow: request.workflow
+        })
+      }
+    }
     return { ok: true, pushResult: await pushService.push(request.options) }
   } catch (error: unknown) {
     return githubErrorResponse(error)
@@ -370,7 +377,6 @@ async function handleGitHubRequest(request: GitHubRequest): Promise<GitHubRespon
 async function handleLocalGitRequest(
   request: LocalGitRequest
 ): Promise<LocalGitResponse> {
-  console.info(`${LOG_PREFIX} local request`, { type: request.type })
   try {
     if (request.type === "refreshLocalGitStatus") {
       const service = new DefaultLocalGitService(
@@ -418,11 +424,6 @@ chrome.runtime.onMessage.addListener(
     _sender,
     sendResponse: (response: BackgroundResponse) => void
   ) => {
-    if (typeof message === "object" && message !== null) {
-      console.info(`${LOG_PREFIX} message received`, {
-        type: (message as { type?: unknown }).type
-      })
-    }
     if (isSnapshotRequest(message)) {
       void handleSnapshotRequest(message).then(sendResponse)
       return true

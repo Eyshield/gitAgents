@@ -195,7 +195,7 @@ export function WorkflowCanvas({ workflow }: Props) {
             <Button
               aria-label="Zoomer"
               data-workflow-control="zoom-in"
-              className="!pointer-events-auto !cursor-pointer h-7 w-7 border-border bg-surface p-0 text-sm text-foreground hover:border-primary hover:bg-white/5"
+              className="!pointer-events-auto cursor-pointer h-7 w-7 border-border bg-surface p-0 text-sm text-foreground hover:border-primary hover:bg-white/5"
               onClick={(event) => {
                 event.preventDefault()
                 event.stopPropagation()

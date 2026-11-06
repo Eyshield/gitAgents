@@ -33,6 +33,10 @@ function requestResult<T>(request: IDBRequest<T>): Promise<T> {
   })
 }
 
+/**
+ * Enregistre (ou met à jour) un snapshot de workflow dans IndexedDB
+ * et retourne le snapshot sauvegardé.
+ */
 export async function saveSnapshot(
   snapshot: WorkflowSnapshot
 ): Promise<WorkflowSnapshot> {
@@ -43,9 +47,7 @@ export async function saveSnapshot(
     await new Promise<void>((resolve, reject) => {
       transaction.oncomplete = () => resolve()
       transaction.onerror = () =>
-        reject(
-          transaction.error ?? new Error("Local save failed.")
-        )
+        reject(transaction.error ?? new Error("Local save failed."))
       transaction.onabort = () =>
         reject(transaction.error ?? new Error("Local save cancelled."))
     })
@@ -88,9 +90,7 @@ export async function deleteSnapshot(snapshotId: string): Promise<void> {
     await new Promise<void>((resolve, reject) => {
       transaction.oncomplete = () => resolve()
       transaction.onerror = () =>
-        reject(
-          transaction.error ?? new Error("Local deletion failed.")
-        )
+        reject(transaction.error ?? new Error("Local deletion failed."))
       transaction.onabort = () =>
         reject(transaction.error ?? new Error("Local deletion cancelled."))
     })

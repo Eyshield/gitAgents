@@ -44,6 +44,20 @@ function formatRelativeDate(timestamp: number): string {
   return `${Math.floor(hours / 24)} days ago`
 }
 
+function commitsForWorkflow(commits: Commit[], workflowId: string): Commit[] {
+  const chronological = [...commits].reverse()
+  let previousHash: string | undefined
+  const relevant: Commit[] = []
+
+  for (const commit of chronological) {
+    const entry = commit.entries.find((item) => item.workflowId === workflowId)
+    if (entry && entry.blobHash !== previousHash) relevant.push(commit)
+    previousHash = entry?.blobHash
+  }
+
+  return relevant.reverse()
+}
+
 export function LocalCommitPanel({ workflowId }: LocalCommitPanelProps) {
   const [status, setStatus] = useState<StatusEntry | null>(null)
   const [commits, setCommits] = useState<Commit[]>([])
@@ -56,8 +70,10 @@ export function LocalCommitPanel({ workflowId }: LocalCommitPanelProps) {
   const [reconnectSignal, setReconnectSignal] = useState(0)
 
   const loadCommits = () => {
-    void listLocalGitCommits(10).then((response) => {
-      if (response.ok) setCommits(response.commits ?? [])
+    void listLocalGitCommits(100).then((response) => {
+      if (response.ok) {
+        setCommits(commitsForWorkflow(response.commits ?? [], workflowId))
+      }
     })
   }
 
@@ -130,7 +146,10 @@ export function LocalCommitPanel({ workflowId }: LocalCommitPanelProps) {
     setError(null)
     setNotice(null)
     void readCurrentWorkflow()
-      .then((workflow) => addLocalGit(workflowId, workflow))
+      .then((workflow) => {
+        console.log("[GitAgent][LocalCommitPanel] handleAdd", workflow)
+        return addLocalGit(workflowId, workflow)
+      })
       .then((response) => {
         if (!response.ok) {
           setError(errorMessage(response.error))
@@ -244,15 +263,22 @@ export function LocalCommitPanel({ workflowId }: LocalCommitPanelProps) {
       />
       <PushPanel
         onReconnect={() => setReconnectSignal((value) => value + 1)}
+        onPulled={() => {
+          refresh()
+          loadCommits()
+        }}
         refreshKey={pushRefreshKey}
+        workflowId={workflowId}
       />
 
       <div className="space-y-2 border-t border-border pt-3">
         <h3 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-          Recent commits
+          Workflow commits
         </h3>
         {commits.length === 0 && (
-          <p className="text-xs text-muted-foreground">No local commits.</p>
+          <p className="text-xs text-muted-foreground">
+            No commits for this workflow.
+          </p>
         )}
         {commits.map((commit) => (
           <div

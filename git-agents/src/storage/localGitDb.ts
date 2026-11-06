@@ -11,6 +11,7 @@ export const LOCAL_GIT_STORES = {
   remotes: "remotes"
 } as const
 
+/** Ouvre la base IndexedDB du Git local et crée les object stores manquants (blobs, index, commits, refs, remotes). */
 export function openLocalGitDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(
@@ -37,7 +38,9 @@ export function openLocalGitDatabase(): Promise<IDBDatabase> {
         database.createObjectStore(LOCAL_GIT_STORES.refs, { keyPath: "name" })
       }
       if (!database.objectStoreNames.contains(LOCAL_GIT_STORES.remotes)) {
-        database.createObjectStore(LOCAL_GIT_STORES.remotes, { keyPath: "name" })
+        database.createObjectStore(LOCAL_GIT_STORES.remotes, {
+          keyPath: "name"
+        })
       }
     }
     request.onsuccess = () => resolve(request.result)
@@ -46,6 +49,7 @@ export function openLocalGitDatabase(): Promise<IDBDatabase> {
   })
 }
 
+/** Convertit une requête IndexedDB (`IDBRequest`) en Promise qui retourne son résultat. */
 export function requestResult<T>(request: IDBRequest<T>): Promise<T> {
   return new Promise((resolve, reject) => {
     request.onsuccess = () => resolve(request.result)
@@ -54,6 +58,7 @@ export function requestResult<T>(request: IDBRequest<T>): Promise<T> {
   })
 }
 
+/** Exécute une opération dans une transaction IndexedDB et retourne son résultat une fois la transaction terminée ; annule la transaction si l'opération échoue. */
 export function transactionResult<T>(
   database: IDBDatabase,
   stores: string[],
@@ -73,9 +78,7 @@ export function transactionResult<T>(
       resolve(result as T)
     }
     transaction.onerror = () =>
-      reject(
-        transaction.error ?? new Error("IndexedDB operation failed.")
-      )
+      reject(transaction.error ?? new Error("IndexedDB operation failed."))
     transaction.onabort = () =>
       reject(transaction.error ?? new Error("IndexedDB operation cancelled."))
 

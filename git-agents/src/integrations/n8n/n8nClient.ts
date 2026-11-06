@@ -76,7 +76,6 @@ export class ConfiguredN8nClient implements N8nClient {
     const endpoint = path.startsWith("/rest/workflows/")
       ? "workflow"
       : "workflows"
-    console.info(`${LOG_PREFIX} request`, { endpoint })
     const controller = new AbortController()
     const timeout = globalThis.setTimeout(() => controller.abort(), 10000)
     try {
@@ -94,10 +93,6 @@ export class ConfiguredN8nClient implements N8nClient {
       }
 
       if (!response.ok) throw toApiError(response.status)
-      console.info(`${LOG_PREFIX} HTTP response`, {
-        endpoint,
-        status: response.status
-      })
       try {
         return unwrapWorkflowResponse((await response.json()) as unknown)
       } catch {

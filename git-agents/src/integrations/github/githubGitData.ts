@@ -10,6 +10,7 @@ export type GitTreeEntry = {
 export type GitHubGitCommit = {
   sha: string
   html_url: string
+  tree: { sha: string }
 }
 
 export class GitHubGitData {
@@ -21,6 +22,13 @@ export class GitHubGitData {
       { method: "POST", body: JSON.stringify({ content, encoding: "utf-8" }) }
     )
     return payload.sha
+  }
+
+  async getCommitTree(owner: string, repo: string, commitSha: string): Promise<string> {
+    const payload = await this.client.requestJson<{ tree: { sha: string } }>(
+      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/commits/${encodeURIComponent(commitSha)}`
+    )
+    return payload.tree.sha
   }
 
   async createTree(

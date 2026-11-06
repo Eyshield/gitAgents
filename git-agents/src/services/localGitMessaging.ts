@@ -10,7 +10,12 @@ import type {
 const LOG_PREFIX = "[GitAgent][messaging]"
 export type LocalGitRequest =
   | { type: "refreshLocalGitStatus"; workflowId: string; workflow: unknown }
-  | { type: "addLocalGit"; workflowId: string; workflow: unknown; filePath?: string }
+  | {
+      type: "addLocalGit"
+      workflowId: string
+      workflow: unknown
+      filePath?: string
+    }
   | { type: "commitLocalGit"; message: string; author?: string }
   | { type: "listLocalGitCommits"; limit?: number }
 
@@ -48,9 +53,7 @@ export function isN8nWorkflowRequest(
   )
 }
 
-export function isLocalGitRequest(
-  value: unknown
-): value is LocalGitRequest {
+export function isLocalGitRequest(value: unknown): value is LocalGitRequest {
   if (typeof value !== "object" || value === null) return false
   const request = value as Partial<LocalGitRequest>
   if (
@@ -72,9 +75,13 @@ export function isLocalGitRequest(
   return request.type === "listLocalGitCommits"
 }
 
+/**
+ * Envoie une requête Git locale au background script via chrome.runtime.sendMessage.
+ * Ne rejette jamais : en cas d'erreur (contexte invalide, service indisponible),
+ * retourne `{ ok: false, error }`. Les wrappers exportés ci-dessous s'appuient dessus.
+ */
 function sendMessage(message: LocalGitRequest): Promise<LocalGitResponse> {
   return new Promise((resolve) => {
-    console.info(`${LOG_PREFIX} sending`, { type: message.type })
     if (!isExtensionContextValid()) {
       console.error(`${LOG_PREFIX} invalid extension context`)
       resolve({
@@ -98,11 +105,6 @@ function sendMessage(message: LocalGitRequest): Promise<LocalGitResponse> {
           })
           return
         }
-        console.info(`${LOG_PREFIX} response`, {
-          type: message.type,
-          ok: response.ok,
-          code: response.code
-        })
         resolve(response)
       })
     } catch {
@@ -137,7 +139,6 @@ export function readN8nWorkflow(
 ): Promise<N8nWorkflowResponse> {
   return new Promise((resolve) => {
     const message: N8nWorkflowRequest = { type: "readN8nWorkflow", workflowId }
-    console.info(`${LOG_PREFIX} sending`, { type: message.type })
     if (!isExtensionContextValid()) {
       console.error(`${LOG_PREFIX} invalid extension context`)
       resolve({
@@ -162,11 +163,6 @@ export function readN8nWorkflow(
           })
           return
         }
-        console.info(`${LOG_PREFIX} response`, {
-          type: message.type,
-          ok: response.ok,
-          code: response.code
-        })
         resolve(response)
       })
     } catch {
